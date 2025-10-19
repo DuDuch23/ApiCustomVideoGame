@@ -3,6 +3,7 @@
 ## Installer les dépendances : composer i
 
 ## Base de données : 
+- Créer un .env avec les infos du .env.example et ajouter les variables de l'env local
 - php bin/console doctrine:database:create
 - symfony console doctrine:migrations:migrate
 
