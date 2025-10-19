@@ -13,70 +13,101 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+#[Route('/api/v1/editors')]
 final class ApiEditorsController extends AbstractController
 {
-    #[Route('/api/v1/editors', name: 'app_api_editors', methods: ['GET'])]
-    public function index(EditorsRepository $editorsRepository, Request $request): JsonResponse
+    #[Route('', name: 'app_api_editors', methods: ['GET'])]
+    public function index(EditorsRepository $editorsRepository, Request $request,
+        TagAwareCacheInterface $cachePool): JsonResponse
     {
         $page = $request->get('page', 1);
-        $limit = $request->get('limit', 5);
+        $limit = $request->get('limit', 10);
+
+        // $cacheIdentifier = "app_api_editors-" . $page . "-" . $limit;
+
+        // $editors = $cachePool->get($cacheIdentifier, 
+        //     function(ItemInterface $item) use ($editorsRepository, $page, $limit) {
+        //         $item->tag("editorsCache");
+        //         return $editorsRepository->findAllWithPagination($page, $limit);
+        //     }
+        // );
 
         $editors = $editorsRepository->findAllWithPagination($page, $limit);
-        // $videosgamesSerialized = $serializer->serialize($videogames, );
+
 
         return $this->json($editors, Response::HTTP_OK, [], ['groups' => 'editor_read']);
     }
 
-    #[Route('/api/v1/editors/create', name:'app_api_editors_create', methods: ['POST'])]
+    #[Route('/create', name:'app_api_editors_create', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN', message: "Vous n'êtes pas autorisé à supprimer cet élément.")]
     public function create(EditorsRepository $editorsRepository, Request $request
         , SerializerInterface $serializer, EntityManagerInterface $em
-        , UrlGeneratorInterface $urlGenerator): JsonResponse
+        , UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
     {
-        $categorie = $serializer->deserialize($request->getContent(), Editor::class, 'json');
-        $em->persist($categorie);
-        $em->flush();
-
+        $editor = $serializer->deserialize($request->getContent(), Editor::class, 'json');
+        
         // Correction du nom de la route pour la génération d'URL
         $location = $urlGenerator->generate(
-            'app_api_editors',
-            ['id' => $categorie->getId()],
+            'app_api_editors_create',
+            ['id' => $editor->getId()],
             UrlGeneratorInterface::ABSOLUTE_URL
         );
-
-        // Correction du contexte de sérialisation
-        return $this->json($categorie, Response::HTTP_CREATED, ["Location" => $location], ['groups' => 'editor_write']);
+        
+        $errors = $validator->validate($editor);
+        if($errors->count() > 0){
+            return $this->json($errors, Response::HTTP_BAD_REQUEST);
+        }
+        
+        $em->persist($editor);
+        $em->flush();
+        return $this->json($editor, Response::HTTP_CREATED, ["Location" => $location], ['groups' => 'editor_write']);
     }
 
-    #[Route('/api/v1/editors/edit/{id}', name:'app_api_editors_edit', methods: ['PUT'])]
+    #[Route('/edit/{id}', name:'app_api_editors_edit', methods: ['PUT'])]
+    #[IsGranted('ROLE_ADMIN', message: "Vous n'êtes pas autorisé à supprimer cet élément.")]
     public function edit(EditorsRepository $editorsRepository, Request $request
         , SerializerInterface $serializer, EntityManagerInterface $em
-        , UrlGeneratorInterface $urlGenerator, Editor $currentCategorie): JsonResponse
+        , UrlGeneratorInterface $urlGenerator, Editor $currentEditor
+        , ValidatorInterface $validator): JsonResponse
     {
         $editEditor = $serializer->deserialize($request->getContent(), Editor::class, 'json',
-        [AbstractNormalizer::OBJECT_TO_POPULATE => $currentCategorie]);
-        $em->persist($editEditor);
-        $em->flush();
-
-        // Correction du nom de la route pour la génération d'URL
+        [AbstractNormalizer::OBJECT_TO_POPULATE => $currentEditor]);
+        
         $location = $urlGenerator->generate(
-            'app_api_editors',
+            'app_api_editors_edit',
             ['id' => $editEditor->getId()],
             UrlGeneratorInterface::ABSOLUTE_URL
         );
-
-        // Correction du contexte de sérialisation
-        return $this->json($editEditor, Response::HTTP_CREATED, ["Location" => $location], ['groups' => 'categorie_write']);
+        
+        $errors = $validator->validate($editEditor);
+        if($errors->count() > 0){
+            return $this->json($errors, Response::HTTP_BAD_REQUEST);
+        }
+        
+        $em->persist($editEditor);
+        $em->flush();
+        return $this->json($editEditor, Response::HTTP_CREATED, ["Location" => $location], ['groups' => 'editor_write']);
     }
 
-    #[Route('/api/v1/editors/delete/{id}', name:'app_api_editors_delete', methods: ['DELETE'])]
+    #[Route('/delete/{id}', name:'app_api_editors_delete', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN', message: "Vous n'êtes pas autorisé à supprimer cet élément.")]
-    public function delete(Editor $Editor, EntityManagerInterface $em): JsonResponse
+    public function delete(Editor $editor, EntityManagerInterface $em
+        , ValidatorInterface $validator): JsonResponse
     {
-        $em->remove($Editor);
+        
+        // $errors = $validator->validate($editEditor);
+        
+        // if($errors->count() > 0){
+            //     return $this->json($errors, Response::HTTP_BAD_REQUEST);
+            // }
+            
+        $em->remove($editor);
         $em->flush();
-
         return $this->json(['status' => 'Suppression avec succès'], Response::HTTP_OK);
     }
 }

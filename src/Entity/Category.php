@@ -4,9 +4,14 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\CategoryRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Serializer\Attribute\Context;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Attribute\MaxDepth;
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
 class Category
@@ -17,8 +22,11 @@ class Category
     #[Groups(['categorie_read'])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    #[Groups(['categorie_read', 'categorie_write'])]
+    #[ORM\Column(length: 255, unique: true)]
+    #[Assert\NotBlank(message: 'Le nom de la catégorie doit être renseigné')]
+    #[Assert\Length(max: 255, maxMessage: "Le nom de la catégorie ne doit pas dépasser 255 caractères.")]
+    #[Groups(['categorie_read', 'categorie_write', 'video_game_read'])]
+    #[Assert\Regex(pattern: "/^[\p{L}\d\s\-\',.!?()]+$/u", message: "Le nom de la catégorie contient des caractères non autorisés.")]
     private ?string $name = null;
 
     /**
@@ -26,7 +34,7 @@ class Category
      */
     #[ORM\ManyToMany(targetEntity: VideoGame::class, mappedBy: 'category')]
     #[Groups(['categorie_read', 'categorie_write'])]
-
+    #[MaxDepth(1)]
     private Collection $videoGames;
 
     public function __construct()

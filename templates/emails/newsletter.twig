@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Newsletter - Nouveaux jeux vidéo à venir</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .upcoming-games {
+            margin-top: 20px;
+        }
+        .game {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .game-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .game-release-date {
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bonjour,</h1>
+    <p>Voici les nouveaux jeux vidéo à venir dans les 7 prochains jours :</p>
+
+    <div class="upcoming-games">
+        {% for game in upcomingGames %}
+            <div class="game">
+                <div class="game-title">{{ game.title }}</div>
+                <div class="game-release-date">Date de sortie : {{ game.releaseDate|date('d/m/Y') }}</div>
+            </div>
+        {% else %}
+            <p>Aucun jeu prévu dans les 7 prochains jours.</p>
+        {% endfor %}
+    </div>
+
+    <p>Merci de suivre notre newsletter !</p>
+</body>
+</html>

@@ -7,6 +7,11 @@ use App\Repository\EditorsRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Serializer\Attribute\Context;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Attribute\MaxDepth;
+
 
 #[ORM\Entity(repositoryClass: EditorsRepository::class)]
 class Editor
@@ -16,18 +21,26 @@ class Editor
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    #[Groups(["editor_read", "editor_write"])]
+    #[ORM\Column(length: 255, unique: true)]
+    #[Groups(["editor_read", "editor_write", "video_game_read"])]
+    #[Assert\NotBlank(message: "Le nom de l'éditeur doit être renseigné.")]
+    #[Assert\Length(max: 255, maxMessage: "Le nom de l'éditeur ne doit pas dépasser 255 caractères.")]
+    #[Assert\Regex(pattern: "/^[\p{L}\d\s\-\',.!?()]+$/u", message: "La nom de l'éditeur contient des caractères non autorisés.")]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["editor_read", "editor_write"])]
+    #[Assert\NotBlank(message: "Le pays de l'éditeur doit être renseigné.")]
+    #[Assert\Length(max: 255, maxMessage: "Le pays de l'éditeur ne doit pas dépasser 255 caractères.")]
+    #[Assert\Regex(pattern: "/^[\p{L}\d\s\-\',.!?()]+$/u", message: "Le pays de l'éditeur contient des caractères non autorisés.")]
+    #[Groups(["editor_read", "editor_write", "video_game_read"])]
     private ?string $country = null;
 
     /**
      * @var Collection<int, VideoGame>
      */
     #[ORM\OneToMany(targetEntity: VideoGame::class, mappedBy: 'editor')]
+    // #[Groups(['video_game_read'])]
+    // #[MaxDepth(1)]
     private Collection $videoGames;
 
     public function __construct()

@@ -19,6 +19,17 @@ class VideoGameRepository extends ServiceEntityRepository
 
     use PaginationTrait;
 
+
+    public function findByReleaseDate(\DateTime $startDate, \DateTime $endDate)
+    {
+        return $this->createQueryBuilder('v')
+            ->where('v.releaseDate BETWEEN :startDate AND :endDate')
+            ->setParameter('startDate', $startDate)
+            ->setParameter('endDate', $endDate)
+            // Assure-toi que l'ordre est spécifié ici, si nécessaire
+            ->getQuery()
+            ->getResult();
+    }
     //    /**
     //     * @return VideoGame[] Returns an array of VideoGame objects
     //     */

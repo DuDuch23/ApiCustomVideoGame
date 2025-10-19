@@ -16,6 +16,7 @@ class EditorFixtures extends Fixture
             ['name' => 'Electronic Arts', 'country' => 'États-Unis'],
             ['name' => 'Square Enix', 'country' => 'Japon'],
             ['name' => 'Bethesda', 'country' => 'États-Unis'],
+            
         ];
         foreach ($editors as $key => $data) {
             $editor = new Editor();

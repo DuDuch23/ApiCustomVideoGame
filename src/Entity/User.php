@@ -6,6 +6,9 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Attribute\Groups;
+
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
@@ -18,19 +21,31 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
+    #[Assert\NotBlank(message: "L'email est obligatoire.")]
+    #[Groups(["user_read", "user_write"])]
+    #[Assert\Email(message: "L'email {{ value }} n'est pas valide.")]
     private ?string $email = null;
 
     /**
      * @var list<string> The user roles
      */
     #[ORM\Column]
-    private array $roles = [];
+    #[Groups(["user_read", "user_write"])]
+    private array $roles = ["ROLE_USER"];
 
     /**
      * @var string The hashed password
      */
     #[ORM\Column]
+    #[Groups(["user_read"])]
+    #[Assert\NotBlank(message: "Le mot de passe est obligatoire.")]
+    #[Assert\Length(min: 8, max: 255, minMessage: "Le mot de passe doit faire au moins 8 caractères.")]
     private ?string $password = null;
+
+    #[ORM\Column]
+    #[Groups(["user_read", "user_write"])]
+    #[Assert\Type(type: 'bool', message: "La valeur de l'inscription à la newsletter doit être booléenne.")]
+    private ?bool $subscription_to_newsletter = false;
 
     public function getId(): ?int
     {
@@ -111,5 +126,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
         // @deprecated, to be removed when upgrading to Symfony 8
+    }
+
+    public function isSubscriptionToNewsletter(): ?bool
+    {
+        return $this->subscription_to_newsletter;
+    }
+
+    public function setSubscriptionToNewsletter(bool $subscription_to_newsletter): static
+    {
+        $this->subscription_to_newsletter = $subscription_to_newsletter;
+
+        return $this;
     }
 }

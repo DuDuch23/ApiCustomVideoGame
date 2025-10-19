@@ -17,6 +17,9 @@ class CategoryFixtures extends Fixture
             ['name' => 'Stratégie'],
             ['name' => 'Simulation'],
             ['name' => 'Sport'],
+            ['name' => 'Roguelike'],
+            ['name' => 'Survie'],
+            ['name' => 'Battle royale'],
         ];
         foreach ($categories as $key => $data) {
             $categorie = new Category();
