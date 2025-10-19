@@ -22,6 +22,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 final class ApiEditorsController extends AbstractController
 {
     #[Route('', name: 'app_api_editors', methods: ['GET'])]
+    #[IsGranted('ROLE_USER', message: "Vous n'êtes pas autorisé à modifier cet élément.")]
     public function index(EditorsRepository $editorsRepository, Request $request,
         TagAwareCacheInterface $cachePool): JsonResponse
     {

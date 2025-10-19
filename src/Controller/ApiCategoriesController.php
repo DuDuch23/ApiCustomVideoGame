@@ -22,6 +22,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 final class ApiCategoriesController extends AbstractController
 {
     #[Route('', name: 'app_api_categories', methods: ['GET'])]
+    #[IsGranted('ROLE_USER', message: "Vous n'êtes pas autorisé à modifier cet élément.")]
     public function index(CategoryRepository $categoryRepository, Request $request,
         TagAwareCacheInterface $cachePool): JsonResponse
     {

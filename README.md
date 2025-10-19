@@ -17,3 +17,6 @@
 
 ## Lancer le cron d'envoie de newsletter tous les lundi à 8h30 :
 - php bin/console messenger:consume
+
+### Lien postman
+- 
